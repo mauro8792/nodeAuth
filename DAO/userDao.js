@@ -87,9 +87,9 @@ exports.deleteUser = (user, callback) => {
   });
 };
 
-exports.getUserByNamePass = (email, password, callback) => {
-  let sql = `SELECT * FROM users WHERE email = (?) AND password = (?) and deleted_at is null `;
-  db.connection.query(sql, [email, password], (err, rows) => {
+exports.getUserByNamePass = (email, callback) => {
+  let sql = `SELECT * FROM users WHERE email = (?) and deleted_at is null `;
+  db.connection.query(sql, [email], (err, rows) => {
     if (err) throw err;
     return callback(err, rows);
   });

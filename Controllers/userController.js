@@ -18,16 +18,12 @@ isExistUser = id => {
 
 exports.index = (req, res) => {
   //verifica
-  jwt.verify(req.token, 'my_secret_key', (err,data)=>{
-    if (err) {
-      res.sendStatus(403)
-    }else{
-      daoUser.getAll((err, users) => {
-        res.json({ users: users, data });
-      });
+  
+  daoUser.getAll((err, users) => {
+    res.json({ users: users });
+  });
 
-    }
-  })
+  
 };
 
 exports.show = (req, res) => {
