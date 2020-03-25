@@ -1,8 +1,9 @@
 const express = require( 'express' )
 const userController = require( '../controllers/userController' )
+const secure = require('../Middlware/secure')
 const router = express.Router()
 
-router.get('/', userController.index  )
+router.get('/', secure.ensureToken, userController.index  )
 router.post('/', userController.store )
 // router.post('/login', userController.login )
 router.get('/:id', userController.show )
