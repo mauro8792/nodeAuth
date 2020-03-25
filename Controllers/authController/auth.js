@@ -1,5 +1,7 @@
 const daoUser = require("../../DAO/userDao");
 
+const jwt = require('jsonwebtoken')
+
 exports.signIn = (req, res)=>{
     let {name, lastName,email, password, id_role } = req.body;  
     try {
@@ -28,7 +30,12 @@ exports.signIn = (req, res)=>{
     
 }
 exports.login = (req, res)=>{
-    let {email, password } = req.body;  
+    let {email, password } = req.body;
+    user ={
+        email :email,
+        password : password
+    }  
+    const token = jwt.sign(user, 'my_secret_key')
     try {
                
         daoUser.getUserByNamePass(email, password,(err,response)=>{
@@ -37,10 +44,14 @@ exports.login = (req, res)=>{
         }
         else{
             console.log("created",response);
-            res.json({"created":response})
+            console.log(token);
+            
+            res.json({"created":response,
+            'token' : token})
+            //res.json({token})
             
         }
-        });
+        }); 
         
     } catch (e) {
         console.log(e);

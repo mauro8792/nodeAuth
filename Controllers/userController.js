@@ -1,4 +1,5 @@
 const daoUser = require("../DAO/userDao.js");
+const jwt = require('jsonwebtoken')
 
 isExistUser = id => {
   let exist = false;
@@ -16,9 +17,17 @@ isExistUser = id => {
 };
 
 exports.index = (req, res) => {
-  daoUser.getAll((err, users) => {
-    res.json({ users: users });
-  });
+  //verifica
+  jwt.verify(req.token, 'my_secret_key', (err,data)=>{
+    if (err) {
+      res.sendStatus(403)
+    }else{
+      daoUser.getAll((err, users) => {
+        res.json({ users: users, data });
+      });
+
+    }
+  })
 };
 
 exports.show = (req, res) => {
