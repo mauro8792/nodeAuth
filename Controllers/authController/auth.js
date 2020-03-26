@@ -36,13 +36,11 @@ exports.signIn = async (req, res)=>{
         }
     })
    
-    console.log('pass', pass); 
 }
 
 
 exports.login = async (req, res)=>{
-    let {email, password } = req.body;
-     
+    let {email, password } = req.body;      
     const token = Token()
     try {
                
