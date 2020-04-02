@@ -2,6 +2,7 @@ const daoUser = require("../../DAO/userDao");
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
 const redis = require('../../services/redis')
+const sendEmail = require('../../services/sendEmail')
 
 
 
@@ -65,41 +66,91 @@ exports.login = async (req, res)=>{
                         redis.insert(token,JSON.stringify(user),tokenTime, err=>{
                             if(err) res.status(500).send('Error')
                             else{
-                                res.json({result: true, token : token, role:user.id_role})
+                                res.json({result: true, token : token, user:user})
                             }
                         })    
                         
-                        // redisService.insert(
-                        //     `TOKEN_${token}`,
-                        //     JSON.stringify(result),
-                        //     process.env.TOKEN_TIME,
-                        //     err => {
-                        //       if (err) {
-                        //         return res.status(500).send(false);
-                        //       }
-                        //       const resp = {
-                        //         user: {
-                        //           id: result.id,
-                        //           username: result.username
-                        //         },
-                        //         access_token: token
-                        //       };
-                        //       return res.send(resp);
-                        //     }
-                        //   );
+                        
                     }
                     
-                })
-                
-                //res.json({"created":response})
-                //res.json({token})
-                
+                })  
             }
         }); 
         
     } catch (e) {
         console.log(e);
     }
+}
+exports.resetPass = async (req,res)=>{
+    //console.log(req.body);
+    const codeEmail = CodePass();
+    const userEmail = req.body.email
+    userCode = {
+        email : userEmail,
+        code : codeEmail
+    }
+    redis.insert(JSON.stringify(codeEmail),userEmail,900,errr=>{
+        if(errr) res.status(500).send('Error insert')
+        
+    })
+    sendEmail.emailSend(userCode,(err,result)=>{
+        if (err)res.status(500).send("Internal Server Error")
+            
+    })
+    res.json({message: "Email enviado!"})
+    
+}
+exports.resetPassCode = async (req,res)=>{
+    const code = req.query.code;
+    redis.get(JSON.stringify(code),(err,result)=>{
+        if (err) {            
+            res.sendStatus(403)
+            throw err
+        }
+        
+         // aca devolvemos el usario q esta reseteando la contraseña  
+         console.log('result resetpass', result);
+          
+         return res.json({user : result, code : code})
+                       
+        
+    
+    })
+    
+    //return res.json('hola');
+}
+exports.changePass = async (req,res)=>{
+    let {email,pass,confirmPass}=req.body;
+    if(pass===confirmPass){
+        await  daoUser.getUserByNamePass(email,async (err,response)=>{
+            if(err){
+                res.status(500).json({ result: false, message: "internal error" })
+            }
+            else{      
+                await bcrypt.hash(pass,10).then( async hash=>{                
+                    pass =hash;
+                    let id = response[0].id
+                    let user = {
+                        id: id,
+                        pass : pass,
+                        confirmPass :pass
+                    }
+                    await  daoUser.updateUser(user,(err,responses)=>{
+                            if(err){
+                                res.status(500).json({ result: false, message: "internal error" })
+                            }else{
+                                res.status(200).json({message:'Contraseña Cambiada con exito!'})
+                                    
+                            }
+                    })
+                })
+                
+            }
+        }); 
+    }else{
+        res.status(500).json({ result: false, message: "Las contraseñas no son iguales" })
+    }
+    
 }
 Token = (size = 10) => {
     let text = '';
@@ -109,3 +160,12 @@ Token = (size = 10) => {
     }
     return text;
   };
+
+  CodePass = (size = 6)=>{
+    let code = '';
+    let possibleChars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    for (let i = 0; i < size; i++) {
+        code += possibleChars.charAt(Math.floor(Math.random() * possibleChars.length));
+    }
+    return code;
+  }

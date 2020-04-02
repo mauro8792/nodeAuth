@@ -3,6 +3,7 @@ const redis = require('../services/redis')
 exports.userLog = (req,res, next)=>{
     let tokenHeader = req.headers['authorization']
     const token = tokenHeader.split(" ");
+    console.log('token',token);
     
     redis.get(token[1], (err, result)=>{
         if (err) {            

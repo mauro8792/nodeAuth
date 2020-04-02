@@ -53,20 +53,17 @@ exports.isExist = (id, callback) => {
 exports.updateUser = (user, callback) => {
   let {
     id,
-    userName,
-    password,
-    created_at,
-    updated_at,
-    deleted_at,
-    id_role
+    pass,
+    confirmPass    
   } = user;
+  if(pass ===confirmPass){
+    let sql = `UPDATE users SET  password = ?  WHERE id = ? AND deleted_at IS NULL`;
+    db.connection.query(sql, [pass, id], (err, rows) => {
+      if (err) throw err;
+      return callback(err, rows);
+    });
+  }
 
-
-  let sql = `UPDATE users SET userName = ? , password = ?  WHERE id = ? AND deleted_at IS NULL`;
-  db.connection.query(sql, [userName, password, id], (err, rows) => {
-    if (err) throw err;
-    return callback(err, rows);
-  });
 };
 
 exports.deleteUser = (user, callback) => {
@@ -86,6 +83,7 @@ exports.deleteUser = (user, callback) => {
     if (err) throw err;
   });
 };
+
 
 exports.getUserByNamePass = (email, callback) => {
   let sql = `SELECT * FROM users WHERE email = (?) and deleted_at is null `;
