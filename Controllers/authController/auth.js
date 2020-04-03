@@ -4,8 +4,6 @@ const jwt = require('jsonwebtoken')
 const redis = require('../../services/redis')
 const sendEmail = require('../../services/sendEmail')
 
-
-
 exports.signIn = async (req, res)=>{
     let {name, lastName,email, password, id_role } = req.body;  
    
@@ -38,8 +36,6 @@ exports.signIn = async (req, res)=>{
     })
    
 }
-
-
 exports.login = async (req, res)=>{
     let {email, password } = req.body;      
     const token = Token()
@@ -107,50 +103,56 @@ exports.resetPassCode = async (req,res)=>{
             res.sendStatus(403)
             throw err
         }
-        
          // aca devolvemos el usario q esta reseteando la contraseña  
          console.log('result resetpass', result);
-          
          return res.json({user : result, code : code})
-                       
-        
-    
     })
-    
-    //return res.json('hola');
 }
 exports.changePass = async (req,res)=>{
-    let {email,pass,confirmPass}=req.body;
-    if(pass===confirmPass){
-        await  daoUser.getUserByNamePass(email,async (err,response)=>{
-            if(err){
-                res.status(500).json({ result: false, message: "internal error" })
-            }
-            else{      
-                await bcrypt.hash(pass,10).then( async hash=>{                
-                    pass =hash;
-                    let id = response[0].id
-                    let user = {
-                        id: id,
-                        pass : pass,
-                        confirmPass :pass
-                    }
-                    await  daoUser.updateUser(user,(err,responses)=>{
-                            if(err){
-                                res.status(500).json({ result: false, message: "internal error" })
-                            }else{
-                                res.status(200).json({message:'Contraseña Cambiada con exito!'})
-                                    
-                            }
-                    })
-                })
-                
-            }
-        }); 
-    }else{
-        res.status(500).json({ result: false, message: "Las contraseñas no son iguales" })
-    }
     
+    console.log('body', req.body);
+    let {pass,confirmPass,code}=req.body;
+    
+    redis.get(JSON.stringify(code), async(err,result)=>{
+
+        if (err) {            
+            res.json({message : 'Error de resetear contraseña'})
+            throw err 
+        }
+        if(!result){
+            res.status(400).json({messa: "El código es incorrecto!"})
+        }
+            
+        if(pass===confirmPass){
+            await  daoUser.getUserByNamePass(result,async (err,response)=>{
+                if(err){
+                    res.status(500).json({ result: false, message: "internal error" })
+                }
+                else{      
+                    await bcrypt.hash(pass,10).then( async hash=>{                
+                        pass =hash;
+                        let id = response[0].id
+                        let user = {
+                            id: id,
+                            pass : pass,
+                            confirmPass :pass
+                        }
+                        await  daoUser.updateUser(user,(err,responses)=>{
+                                if(err){
+                                    res.status(500).json({ result: false, message: "internal error" })
+                                }else{
+                                    res.status(200).json({message:'Contraseña Cambiada con exito!'})
+                                        
+                                }
+                        })
+                    })                    
+                }
+            }); 
+        }else{
+            res.status(500).json({ message: "Las contraseñas no son iguales" })
+        }
+               
+    })
 }
 Token = (size = 10) => {
     let text = '';

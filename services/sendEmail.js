@@ -16,7 +16,7 @@ exports.emailSend=(userCode,callBack)=>{
         to: email,
         subject: 'Sending Email using Node.js',
         text: `Para poder recuperar la contraseña por favor
-         ingrese a este link: http://localhost:3000/api/resetPassword?code=${code}`
+         ingrese a este link: http://localhost:3001/resetPassword?code=${code}`
       };
 
       transporter.sendMail(mailOptions, function(error, info){

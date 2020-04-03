@@ -56,14 +56,11 @@ exports.updateUser = (user, callback) => {
     pass,
     confirmPass    
   } = user;
-  if(pass ===confirmPass){
     let sql = `UPDATE users SET  password = ?  WHERE id = ? AND deleted_at IS NULL`;
     db.connection.query(sql, [pass, id], (err, rows) => {
       if (err) throw err;
       return callback(err, rows);
-    });
-  }
-
+    }); 
 };
 
 exports.deleteUser = (user, callback) => {
